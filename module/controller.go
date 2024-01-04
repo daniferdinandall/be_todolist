@@ -2,6 +2,7 @@ package todolist
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -98,19 +99,6 @@ func InsertDoc(db *mongo.Database, col string, doc interface{}) {
 	}
 }
 
-func GetUserFromPhoneNumber(phoneNumber string, db *mongo.Database) (doc model.User, err error) {
-	collection := db.Collection("user")
-	filter := bson.M{"phoneNumber": phoneNumber}
-	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return doc, fmt.Errorf("email tidak ditemukan")
-		}
-		return doc, fmt.Errorf("kesalahan server")
-	}
-	return doc, nil
-}
-
 // Main Functions
 
 func SignUp(db *mongo.Database, insertedDoc model.User) error {
@@ -125,17 +113,12 @@ func SignUp(db *mongo.Database, insertedDoc model.User) error {
 		return fmt.Errorf("nomor telepon tidak valid")
 	}
 
-	// phoneNumberExists, _ := GetUserFromPhoneNumber(insertedDoc.PhoneNumber, db)
-	// if insertedDoc.PhoneNumber == phoneNumberExists.PhoneNumber {
-	// 	return fmt.Errorf("nomor telepon sudah terdaftar")
-	// }
-
 	if err := checkmail.ValidateFormat(insertedDoc.Email); err != nil {
 		return fmt.Errorf("email tidak valid")
 	}
-	userExists := GetDoc(db, col, model.User{}, bson.M{"email": insertedDoc.Email})
 
-	if insertedDoc.Email == userExists {
+	existsDoc, _ := GetUserFromEmail(insertedDoc.Email, db)
+	if insertedDoc.Email == existsDoc.Email {
 		return fmt.Errorf("email sudah terdaftar")
 	}
 	if strings.Contains(insertedDoc.Password, " ") {
@@ -147,20 +130,19 @@ func SignUp(db *mongo.Database, insertedDoc model.User) error {
 
 	hash, _ := HashPassword(insertedDoc.Password)
 
-	var doc model.User
-	doc.ID = objectId
-	doc.Email = insertedDoc.Email
-	doc.Password = hash
-	doc.Name = insertedDoc.Name
-	doc.PhoneNumber = insertedDoc.PhoneNumber
-	doc.Role = "user"
+	insertedDoc.ID = objectId
+	insertedDoc.Password = hash
 
-	InsertDoc(db, col, doc)
-
+	collection := db.Collection(col)
+	_, err := collection.InsertOne(context.Background(), insertedDoc)
+	if err != nil {
+		fmt.Println("Error InsertDoc in colection", col, ":", err)
+	}
 	return nil
 }
 
-func SignIn(db *mongo.Database, col string, insertedDoc model.User) (user model.User, Status bool, err error) {
+func SignIn(db *mongo.Database, insertedDoc model.User) (user model.User, Status bool, err error) {
+
 	if insertedDoc.Email == "" || insertedDoc.Password == "" {
 		return user, false, fmt.Errorf("mohon untuk melengkapi data")
 	}
@@ -178,39 +160,22 @@ func SignIn(db *mongo.Database, col string, insertedDoc model.User) (user model.
 	return existsDoc, true, nil
 }
 
-func CreateTodolist(db *mongo.Database, col string, insertedDoc model.Todolist) (doc model.Todolist, err error) {
-	if insertedDoc.Title == "" || insertedDoc.Description == "" || insertedDoc.DueDate == "" || insertedDoc.Priority == 0 {
-		return doc, fmt.Errorf("mohon untuk melengkapi data")
+func CreateTodolist(db *mongo.Database, doc model.Todolist) (err error) {
+	if doc.Title == "" || doc.Description == "" || doc.DueDate == "" || doc.Priority == 0 {
+		return fmt.Errorf("mohon untuk melengkapi data")
 	}
-	objectId := primitive.NewObjectID()
-
-	doc.ID = objectId
-	doc.UserID = insertedDoc.UserID
-	doc.Title = insertedDoc.Title
-	doc.Description = insertedDoc.Description
-	doc.DueDate = insertedDoc.DueDate
-	doc.Priority = insertedDoc.Priority
-	doc.Completed = false
-
-	InsertDoc(db, col, doc)
-
-	return doc, nil
-}
-
-func GetTodolist(db *mongo.Database, col string, filter bson.M) (docs []model.Todolist, err error) {
+	col := "todolist"
 	collection := db.Collection(col)
-	cursor, err := collection.Find(context.Background(), filter)
+	_, err = collection.InsertOne(context.Background(), doc)
 	if err != nil {
-		fmt.Println("Error GetAllDocs in colection", col, ":", err)
+		fmt.Println("Error InsertDoc in colection", col, ":", err)
 	}
-	err = cursor.All(context.Background(), &docs)
-	if err != nil {
-		fmt.Println(err)
-	}
-	return docs, nil
+	return nil
 }
 
-func GetTodolistByID(db *mongo.Database, col string, filter bson.M) (doc model.Todolist, err error) {
+func GetTodolistByID(db *mongo.Database, _id primitive.ObjectID) (doc model.Todolist, err error) {
+	col := "todolist"
+	filter := bson.M{"_id": _id}
 	collection := db.Collection(col)
 	err = collection.FindOne(context.Background(), filter).Decode(&doc)
 	if err != nil {
@@ -219,20 +184,45 @@ func GetTodolistByID(db *mongo.Database, col string, filter bson.M) (doc model.T
 	return doc, nil
 }
 
-func UpdateTodolist(db *mongo.Database, col string, filter bson.M, update bson.M) (doc model.Todolist, err error) {
+func GetAllTodolistByUserID(db *mongo.Database, doc model.Todolist) (docs []model.Todolist, err error) {
+	filter := bson.M{"userid": doc.UserID}
+	col := "todolist"
 	collection := db.Collection(col)
-	err = collection.FindOneAndUpdate(context.Background(), filter, update).Decode(&doc)
+	cursor, err := collection.Find(context.Background(), filter)
 	if err != nil {
 		fmt.Println("Error GetDoc in colection", col, ":", err)
 	}
-	return doc, nil
+	err = cursor.All(context.Background(), &docs)
+	if err != nil {
+		return docs, fmt.Errorf("kesalahan server")
+	}
+	return docs, nil
 }
 
-func DeleteTodolist(db *mongo.Database, col string, filter bson.M) (doc model.Todolist, err error) {
+func UpdateTodolist(db *mongo.Database, doc model.Todolist) (err error) {
+	filter := bson.M{"_id": doc.ID}
+	col := "todolist"
 	collection := db.Collection(col)
-	err = collection.FindOneAndDelete(context.Background(), filter).Decode(&doc)
+	result, err := collection.UpdateOne(context.Background(), filter, bson.M{"$set": doc})
 	if err != nil {
 		fmt.Println("Error GetDoc in colection", col, ":", err)
 	}
-	return doc, nil
+	if result.ModifiedCount == 0 {
+		err = errors.New("no data has been changed with the specified id")
+		return
+	}
+	return nil
+}
+
+func DeleteTodolist(db *mongo.Database, doc model.Todolist) error {
+	collection := db.Collection("todolist")
+	filter := bson.M{"_id": doc.ID}
+	result, err := collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return fmt.Errorf("error deleting data for ID %s: %s", doc.ID, err.Error())
+	}
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("data with ID %s not found", doc.ID)
+	}
+	return nil
 }
