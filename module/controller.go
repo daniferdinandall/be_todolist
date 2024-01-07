@@ -168,7 +168,7 @@ func SignIn(db *mongo.Database, insertedDoc model.User) (user model.User, Status
 }
 
 func CreateTodolist(db *mongo.Database, doc model.Todolist) (err error) {
-	if doc.Title == "" || doc.Description == "" || doc.DueDate == 0 || doc.Priority == 0 {
+	if doc.Title == "" || doc.Description == "" || doc.DueDate == 0 || doc.Priority == 0 || doc.UserID == "" {
 		return fmt.Errorf("mohon untuk melengkapi data")
 	}
 	col := "todolist"

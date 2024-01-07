@@ -155,18 +155,14 @@ func GCFGetAllTodolist(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Re
 	}
 
 	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	useridstring, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
 
 	if err1 != nil {
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&dataTodolist)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
+	dataTodolist.UserID = useridstring.Id
 
 	docs, err := GetAllTodolistByUserID(conn, dataTodolist)
 	if err != nil {
@@ -338,6 +334,19 @@ func GCFUpdateProfile(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Req
 		Response.Message = "error parsing application/json3: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
+
+	// Get Id
+	id := GetID(r)
+	if id == "" {
+		Response.Message = "Wrong parameter"
+		return GCFReturnStruct(Response)
+	}
+	idparam, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		Response.Message = "Invalid id parameter"
+		return GCFReturnStruct(Response)
+	}
+	dataUser.ID = idparam
 
 	err = UpdateProfile(conn, dataUser)
 	if err != nil {
