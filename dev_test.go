@@ -33,7 +33,7 @@ func TestEncodeToken(t *testing.T) {
 
 func TestDecodeToken(t *testing.T) {
 	publicKey := "e00b393053b1e23efa50af4d919a1cfb853fcc4cb0cb5b5cce6fc73088fc1722"
-	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA3VDE2OjQ4OjI4WiIsImlhdCI6IjIwMjQtMDEtMDdUMTQ6NDg6MjhaIiwiaWQiOiIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAiLCJuYmYiOiIyMDI0LTAxLTA3VDE0OjQ4OjI4WiJ9DXZZbi5sSWl6bKgv51prOoQWvxX-tRJyxv3Bgs0m9100Ti5ipADcr6J3uJN9QMuvoR1aDYXBkkXMCuv7Z9FSBg"
+	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA3VDE3OjIwOjQ5WiIsImlhdCI6IjIwMjQtMDEtMDdUMTU6MjA6NDlaIiwiaWQiOiI2NTlhYjUxMWU0Y2JmOWEwYTZiMTY4MjciLCJuYmYiOiIyMDI0LTAxLTA3VDE1OjIwOjQ5WiJ9uvfOoSPH2kL_9ohqTAAUvUWMXZFwhi2GQPcbXkbUap0tDkU80MBgixTSgrvssuw48OmnPxk3-itrNVSa6bsABA"
 	useridstring, err := watoken.Decode(publicKey, tokenstring)
 
 	if err != nil {
