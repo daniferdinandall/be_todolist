@@ -19,9 +19,10 @@ type Todolist struct {
 	UserID      string             `bson:"userid,omitempty" json:"userid,omitempty"`
 	Title       string             `bson:"title,omitempty" json:"title,omitempty"`
 	Description string             `bson:"description,omitempty" json:"description,omitempty"`
-	DueDate     string             `bson:"duedate,omitempty" json:"duedate,omitempty"`
+	DueDate     int64              `bson:"duedate,omitempty" json:"duedate,omitempty"`
 	Priority    int                `json:"priority,omitempty" bson:"priority,omitempty"`
 	Completed   bool               `json:"completed,omitempty" bson:"completed,omitempty"`
+	CreatedAt   int64              `json:"createdat,omitempty" bson:"createdat,omitempty"`
 }
 
 type Payload struct {
@@ -30,4 +31,29 @@ type Payload struct {
 	Exp   time.Time          `json:"exp"`
 	Iat   time.Time          `json:"iat"`
 	Nbf   time.Time          `json:"nbf"`
+}
+
+type Credential struct {
+	Status  bool   `json:"status" bson:"status"`
+	Token   string `json:"token,omitempty" bson:"token,omitempty"`
+	Message string `json:"message,omitempty" bson:"message,omitempty"`
+}
+
+type TodolistResponse struct {
+	Status  bool       `json:"status" bson:"status"`
+	Message string     `json:"message,omitempty" bson:"message,omitempty"`
+	Data    []Todolist `json:"data" bson:"data"`
+}
+
+type ProfileResponse struct {
+	Status  bool   `json:"status" bson:"status"`
+	Message string `json:"message,omitempty" bson:"message,omitempty"`
+	Data    User   `json:"data" bson:"data"`
+	Image   string `json:"image" bson:"image"`
+}
+
+type Image struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	UserID    string             `bson:"userid,omitempty" json:"userid,omitempty"`
+	Base64Url string             `bson:"base64url,omitempty" json:"base64url,omitempty"`
 }

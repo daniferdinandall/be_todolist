@@ -3,19 +3,52 @@ package todolist
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	model "github.com/daniferdinandall/be_todolist/model"
 	module "github.com/daniferdinandall/be_todolist/module"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/whatsauth/watoken"
 )
 
 var db = module.MongoConnect("MONGOSTRING", "db_todolist")
+
+func TestGenerateKey(t *testing.T) {
+	privateKey, publicKey := watoken.GenerateKey()
+	fmt.Println("privateKey : ", privateKey)
+	fmt.Println("publicKey : ", publicKey)
+}
+
+func TestEncodeToken(t *testing.T) {
+	privateKey := "ae647abe102886b0cca6eac1a9ab78174d209466eaddffe977040fb0badcae87e00b393053b1e23efa50af4d919a1cfb853fcc4cb0cb5b5cce6fc73088fc1722"
+	userid := "659654c7931d81bd72a9c4c6"
+	tokenstring, err := watoken.Encode(userid, privateKey)
+
+	if err != nil {
+		t.Errorf("Error inserting document: %v", err)
+	} else {
+		fmt.Println("Data berhasil disimpan dengan nama :", tokenstring)
+	}
+}
+
+func TestDecodeToken(t *testing.T) {
+	publicKey := "e00b393053b1e23efa50af4d919a1cfb853fcc4cb0cb5b5cce6fc73088fc1722"
+	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA0VDE2OjIzOjEyKzA3OjAwIiwiaWF0IjoiMjAyNC0wMS0wNFQxNDoyMzoxMiswNzowMCIsImlkIjoiNjU5NjU0Yzc5MzFkODFiZDcyYTljNGM2IiwibmJmIjoiMjAyNC0wMS0wNFQxNDoyMzoxMiswNzowMCJ9lr0vK81FvhZmHt7BDcbTbR-ylZFEEs80CE99NhqGr_JLeOtc5_0La4glOt2JfqdcCftQdwE9hntMDOS5R9eYDg"
+	useridstring, err := watoken.Decode(publicKey, tokenstring)
+
+	if err != nil {
+		t.Errorf("Error inserting document: %v", err)
+	} else {
+		fmt.Println("Data berhasil disimpan dengan nama :", useridstring.Id)
+	}
+}
 
 func TestInsertDoc(t *testing.T) {
 	var doc model.Todolist
 	doc.Title = "Test2"
 	doc.Description = "Test"
-	doc.DueDate = "Test"
+	doc.DueDate = time.Now().Unix()
 	doc.Priority = 1
 	doc.Completed = true
 
@@ -46,15 +79,15 @@ func TestSignIn(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error getting document: %v", err)
 	} else {
-		fmt.Println("Welcome bang:", user)
+		fmt.Println("Welcome bang:", user.ID.Hex())
 	}
 }
 
 func TestCreateTodolist(t *testing.T) {
 	var doc model.Todolist
-	doc.Title = "Test3"
+	doc.Title = "test time2"
 	doc.Description = "Test"
-	doc.DueDate = "Test"
+	doc.DueDate = time.Now().Unix()
 	doc.Priority = 1
 	doc.Completed = true
 
@@ -66,16 +99,13 @@ func TestCreateTodolist(t *testing.T) {
 
 func TestUpdateDoc(t *testing.T) {
 
-	id, err := primitive.ObjectIDFromHex("65964839c2d27eb6a1456f9a")
+	id, err := primitive.ObjectIDFromHex("659426d7294a5abb63c66959")
 	if err != nil {
 		t.Error(err)
 	}
 
 	var doc model.Todolist
 	doc.ID = id
-	doc.Title = "TestUpdate"
-	doc.Description = "Test"
-	doc.UserID = "659647e862c130d11ec816c5"
 
 	err = module.UpdateTodolist(db, doc)
 	if err != nil {
@@ -115,7 +145,44 @@ func TestDeleteDoc(t *testing.T) {
 		t.Error(err)
 	}
 	doc.ID = id
-	err = module.DeleteTodolist(db, doc)
+	err = module.DeleteTodolist(db, doc.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(doc)
+}
+
+func TestGetProfile(t *testing.T) {
+	var doc model.User
+	id, err := primitive.ObjectIDFromHex("659654c7931d81bd72a9c4c6")
+	if err != nil {
+		t.Error(err)
+	}
+	doc.ID = id
+	doc, img, err := module.GetProfile(db, doc.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if img != "" {
+		fmt.Println(img)
+	}
+	fmt.Println(doc)
+}
+
+func TestUpdateProfile(t *testing.T) {
+	var doc model.User
+	id, err := primitive.ObjectIDFromHex("659654c7931d81bd72a9c4c6")
+	if err != nil {
+		t.Error(err)
+	}
+	doc.ID = id
+	doc.Name = "dani ferdinan"
+	doc.PhoneNumber = "625156122123"
+
+	var img model.Image
+	img.Base64Url = "sasa"
+
+	err = module.UpdateProfile(db, doc, img.Base64Url)
 	if err != nil {
 		t.Error(err)
 	}

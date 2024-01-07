@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	model "github.com/daniferdinandall/be_todolist/model"
 
@@ -24,6 +26,10 @@ func MongoConnect(MongoString, dbname string) *mongo.Database {
 		fmt.Printf("MongoConnect: %v\n", err)
 	}
 	return client.Database(dbname)
+}
+
+func GetID(r *http.Request) string {
+	return r.URL.Query().Get("id")
 }
 
 func ValidatePhoneNumber(phoneNumber string) (bool, error) {
@@ -69,7 +75,8 @@ func GetAllDocs(db *mongo.Database, col string, docs interface{}) interface{} {
 	return docs
 }
 
-func GetDoc(db *mongo.Database, col string, doc interface{}, filter bson.M) interface{} {
+func GetDoc(db *mongo.Database, doc interface{}, filter bson.M) interface{} {
+	col := "todolist"
 	collection := db.Collection(col)
 	err := collection.FindOne(context.Background(), filter).Decode(&doc)
 	if err != nil {
@@ -161,11 +168,18 @@ func SignIn(db *mongo.Database, insertedDoc model.User) (user model.User, Status
 }
 
 func CreateTodolist(db *mongo.Database, doc model.Todolist) (err error) {
-	if doc.Title == "" || doc.Description == "" || doc.DueDate == "" || doc.Priority == 0 {
+	if doc.Title == "" || doc.Description == "" || doc.DueDate == 0 || doc.Priority == 0 {
 		return fmt.Errorf("mohon untuk melengkapi data")
 	}
 	col := "todolist"
 	collection := db.Collection(col)
+	// Get the current time
+	currentTime := time.Now()
+
+	// Convert time to Unix timestamp
+	unixTimestamp := currentTime.Unix()
+
+	doc.CreatedAt = unixTimestamp
 	_, err = collection.InsertOne(context.Background(), doc)
 	if err != nil {
 		fmt.Println("Error InsertDoc in colection", col, ":", err)
@@ -214,15 +228,85 @@ func UpdateTodolist(db *mongo.Database, doc model.Todolist) (err error) {
 	return nil
 }
 
-func DeleteTodolist(db *mongo.Database, doc model.Todolist) error {
+func DeleteTodolist(db *mongo.Database, _id primitive.ObjectID) error {
 	collection := db.Collection("todolist")
-	filter := bson.M{"_id": doc.ID}
+	filter := bson.M{"_id": _id}
 	result, err := collection.DeleteOne(context.Background(), filter)
 	if err != nil {
-		return fmt.Errorf("error deleting data for ID %s: %s", doc.ID, err.Error())
+		return fmt.Errorf("error deleting data for ID %s: %s", _id, err.Error())
 	}
 	if result.DeletedCount == 0 {
-		return fmt.Errorf("data with ID %s not found", doc.ID)
+		return fmt.Errorf("data with ID %s not found", _id)
 	}
 	return nil
+}
+
+func UpdateProfile(db *mongo.Database, doc model.User, base64image string) (err error) {
+	col := "user"
+	filter := bson.M{"_id": doc.ID}
+	collection := db.Collection(col)
+	result, err := collection.UpdateOne(context.Background(), filter, bson.M{"$set": doc})
+	if err != nil {
+		fmt.Println("Error GetDoc in colection", col, ":", err)
+	}
+	if result.ModifiedCount == 0 {
+		err = errors.New("no data has been changed with the specified id")
+		return
+	}
+
+	// set/update image
+	colimg := "image"
+	filterimg := bson.M{"userid": doc.ID.Hex()}
+	collectionimg := db.Collection(colimg)
+	var image model.Image
+	err = collectionimg.FindOne(context.Background(), filterimg).Decode(&image)
+	if err != nil {
+		fmt.Println("Error GetDoc in colection", colimg, ":", err)
+	}
+	if image.UserID == "" {
+		image.UserID = doc.ID.Hex()
+		image.Base64Url = base64image
+		_, err = collectionimg.InsertOne(context.Background(), image)
+		if err != nil {
+			fmt.Println("Error InsertDoc in colection", colimg, ":", err)
+		}
+	} else {
+		_, err = collectionimg.UpdateOne(context.Background(), filterimg, bson.M{"$set": bson.M{"base64url": base64image}})
+		if err != nil {
+			fmt.Println("Error GetDoc in colection", colimg, ":", err)
+		}
+	}
+
+	return nil
+}
+
+func GetProfile(db *mongo.Database, _id primitive.ObjectID) (doc model.User, image string, err error) {
+	col := "user"
+	filter := bson.M{"_id": _id}
+	collection := db.Collection(col)
+	err = collection.FindOne(context.Background(), filter).Decode(&doc)
+	if err != nil {
+		fmt.Println("Error GetDoc in colection", col, ":", err)
+	}
+	doc = model.User{
+		ID:          doc.ID,
+		Name:        doc.Name,
+		Email:       doc.Email,
+		PhoneNumber: doc.PhoneNumber,
+	}
+
+	colimg := "image"
+	filterimg := bson.M{"userid": doc.ID.Hex()}
+	collectionimg := db.Collection(colimg)
+	var img model.Image
+	err = collectionimg.FindOne(context.Background(), filterimg).Decode(&img)
+	if err != nil {
+		fmt.Println("Error GetDoc in colection", colimg, ":", err)
+	}
+
+	if img.UserID != "" {
+		image = img.Base64Url
+	}
+
+	return doc, image, nil
 }
