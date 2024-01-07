@@ -12,6 +12,7 @@ type User struct {
 	Email       string             `json:"email" bson:"email"`
 	Password    string             `json:"password" bson:"password"`
 	PhoneNumber string             `json:"phonenumber,omitempty" bson:"phonenumber,omitempty"`
+	Base64Url   string             `bson:"base64url,omitempty" json:"base64url,omitempty"`
 }
 
 type Todolist struct {
@@ -49,11 +50,4 @@ type ProfileResponse struct {
 	Status  bool   `json:"status" bson:"status"`
 	Message string `json:"message,omitempty" bson:"message,omitempty"`
 	Data    User   `json:"data" bson:"data"`
-	Image   string `json:"image" bson:"image"`
-}
-
-type Image struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	UserID    string             `bson:"userid,omitempty" json:"userid,omitempty"`
-	Base64Url string             `bson:"base64url,omitempty" json:"base64url,omitempty"`
 }

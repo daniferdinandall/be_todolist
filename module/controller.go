@@ -241,7 +241,7 @@ func DeleteTodolist(db *mongo.Database, _id primitive.ObjectID) error {
 	return nil
 }
 
-func UpdateProfile(db *mongo.Database, doc model.User, base64image string) (err error) {
+func UpdateProfile(db *mongo.Database, doc model.User) (err error) {
 	col := "user"
 	filter := bson.M{"_id": doc.ID}
 	collection := db.Collection(col)
@@ -254,33 +254,10 @@ func UpdateProfile(db *mongo.Database, doc model.User, base64image string) (err 
 		return
 	}
 
-	// set/update image
-	colimg := "image"
-	filterimg := bson.M{"userid": doc.ID.Hex()}
-	collectionimg := db.Collection(colimg)
-	var image model.Image
-	err = collectionimg.FindOne(context.Background(), filterimg).Decode(&image)
-	if err != nil {
-		fmt.Println("Error GetDoc in colection", colimg, ":", err)
-	}
-	if image.UserID == "" {
-		image.UserID = doc.ID.Hex()
-		image.Base64Url = base64image
-		_, err = collectionimg.InsertOne(context.Background(), image)
-		if err != nil {
-			fmt.Println("Error InsertDoc in colection", colimg, ":", err)
-		}
-	} else {
-		_, err = collectionimg.UpdateOne(context.Background(), filterimg, bson.M{"$set": bson.M{"base64url": base64image}})
-		if err != nil {
-			fmt.Println("Error GetDoc in colection", colimg, ":", err)
-		}
-	}
-
 	return nil
 }
 
-func GetProfile(db *mongo.Database, _id primitive.ObjectID) (doc model.User, image string, err error) {
+func GetProfile(db *mongo.Database, _id primitive.ObjectID) (doc model.User, err error) {
 	col := "user"
 	filter := bson.M{"_id": _id}
 	collection := db.Collection(col)
@@ -293,20 +270,8 @@ func GetProfile(db *mongo.Database, _id primitive.ObjectID) (doc model.User, ima
 		Name:        doc.Name,
 		Email:       doc.Email,
 		PhoneNumber: doc.PhoneNumber,
+		Base64Url:   doc.Base64Url,
 	}
 
-	colimg := "image"
-	filterimg := bson.M{"userid": doc.ID.Hex()}
-	collectionimg := db.Collection(colimg)
-	var img model.Image
-	err = collectionimg.FindOne(context.Background(), filterimg).Decode(&img)
-	if err != nil {
-		fmt.Println("Error GetDoc in colection", colimg, ":", err)
-	}
-
-	if img.UserID != "" {
-		image = img.Base64Url
-	}
-
-	return doc, image, nil
+	return doc, nil
 }

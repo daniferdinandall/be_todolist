@@ -159,13 +159,11 @@ func TestGetProfile(t *testing.T) {
 		t.Error(err)
 	}
 	doc.ID = id
-	doc, img, err := module.GetProfile(db, doc.ID)
+	doc, err = module.GetProfile(db, doc.ID)
 	if err != nil {
 		t.Error(err)
 	}
-	if img != "" {
-		fmt.Println(img)
-	}
+
 	fmt.Println(doc)
 }
 
@@ -179,10 +177,9 @@ func TestUpdateProfile(t *testing.T) {
 	doc.Name = "dani ferdinan"
 	doc.PhoneNumber = "625156122123"
 
-	var img model.Image
-	img.Base64Url = "sasa"
+	doc.Base64Url = "sasa"
 
-	err = module.UpdateProfile(db, doc, img.Base64Url)
+	err = module.UpdateProfile(db, doc)
 	if err != nil {
 		t.Error(err)
 	}
