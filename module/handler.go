@@ -346,6 +346,12 @@ func GCFUpdateProfile(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Req
 		return GCFReturnStruct(Response)
 	}
 
+	err := json.NewDecoder(r.Body).Decode(&dataUser)
+	if err != nil {
+		Response.Message = "error parsing application/json3: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+
 	// Get Id
 	idparam, err := primitive.ObjectIDFromHex(useridstring.Id)
 	if err != nil {
