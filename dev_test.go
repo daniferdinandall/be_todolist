@@ -21,7 +21,7 @@ func TestGenerateKey(t *testing.T) {
 
 func TestEncodeToken(t *testing.T) {
 	privateKey := "ae647abe102886b0cca6eac1a9ab78174d209466eaddffe977040fb0badcae87e00b393053b1e23efa50af4d919a1cfb853fcc4cb0cb5b5cce6fc73088fc1722"
-	userid := "659654c7931d81bd72a9c4c6"
+	userid := "659ab511e4cbf9a0a6b16827"
 	tokenstring, err := watoken.Encode(userid, privateKey)
 
 	if err != nil {
@@ -33,13 +33,13 @@ func TestEncodeToken(t *testing.T) {
 
 func TestDecodeToken(t *testing.T) {
 	publicKey := "e00b393053b1e23efa50af4d919a1cfb853fcc4cb0cb5b5cce6fc73088fc1722"
-	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA3VDIxOjIyOjQ3KzA3OjAwIiwiaWF0IjoiMjAyNC0wMS0wN1QxOToyMjo0NyswNzowMCIsImlkIjoiNjU5NjU0Yzc5MzFkODFiZDcyYTljNGM2IiwibmJmIjoiMjAyNC0wMS0wN1QxOToyMjo0NyswNzowMCJ9k1dKmz0HdalAl06m8qBKI7it5zbgHKjphy5zloe9Co5D2vDCmUXdWNkU6vm6PH_h3zlxCW3Q4L1M3AZhpSomBg"
+	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA3VDE2OjQ4OjI4WiIsImlhdCI6IjIwMjQtMDEtMDdUMTQ6NDg6MjhaIiwiaWQiOiIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAiLCJuYmYiOiIyMDI0LTAxLTA3VDE0OjQ4OjI4WiJ9DXZZbi5sSWl6bKgv51prOoQWvxX-tRJyxv3Bgs0m9100Ti5ipADcr6J3uJN9QMuvoR1aDYXBkkXMCuv7Z9FSBg"
 	useridstring, err := watoken.Decode(publicKey, tokenstring)
 
 	if err != nil {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
-		fmt.Println("Data berhasil disimpan dengan nama :", useridstring.Id)
+		fmt.Println("Data berhasil disimpan dengan nama :", useridstring)
 	}
 }
 
@@ -72,7 +72,7 @@ func TestSignUp(t *testing.T) {
 func TestSignIn(t *testing.T) {
 	var doc model.User
 	doc.Email = "dani@mail.com"
-	doc.Password = "dani1234"
+	doc.Password = "12345678"
 	user, Status, err := module.SignIn(db, doc)
 	fmt.Println("Status :", Status)
 	if err != nil {

@@ -54,11 +54,11 @@ func GCFHandlerSignin(MONGOCONNSTRINGENV, PASETOPRIVATEKEYENV string, r *http.Re
 	}
 	Response.Status = true
 	// Response.Message = "Halo " + dataUser.Name
-	tokenstring, err := watoken.Encode(dataUser.ID.Hex(), os.Getenv(PASETOPRIVATEKEYENV))
+	tokenstring, err := watoken.Encode(user.ID.Hex(), os.Getenv(PASETOPRIVATEKEYENV))
 	if err != nil {
 		Response.Message = "Gagal Encode Token : " + err.Error()
 	} else {
-		Response.Message = "Selamat Datang " + user.Email + " di Todolist" + strconv.FormatBool(status)
+		Response.Message = "Selamat Datang " + user.Name + " di Todolist" + strconv.FormatBool(status)
 		Response.Token = tokenstring
 	}
 	return GCFReturnStruct(Response)
