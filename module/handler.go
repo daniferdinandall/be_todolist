@@ -298,7 +298,7 @@ func GCFGetProfile(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Reques
 	}
 
 	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	useridstring, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
 
 	if err1 != nil {
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
@@ -306,12 +306,7 @@ func GCFGetProfile(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Reques
 	}
 
 	// Get Id
-	id := GetID(r)
-	if id == "" {
-		Response.Message = "Wrong parameter"
-		return GCFReturnStruct(Response)
-	}
-	idparam, err := primitive.ObjectIDFromHex(id)
+	idparam, err := primitive.ObjectIDFromHex(useridstring.Id)
 	if err != nil {
 		Response.Message = "Invalid id parameter"
 		return GCFReturnStruct(Response)
@@ -344,30 +339,20 @@ func GCFUpdateProfile(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Req
 	}
 
 	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	useridstring, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
 
 	if err1 != nil {
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&dataUser)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
-
 	// Get Id
-	id := GetID(r)
-	if id == "" {
-		Response.Message = "Wrong parameter"
-		return GCFReturnStruct(Response)
-	}
-	idparam, err := primitive.ObjectIDFromHex(id)
+	idparam, err := primitive.ObjectIDFromHex(useridstring.Id)
 	if err != nil {
 		Response.Message = "Invalid id parameter"
 		return GCFReturnStruct(Response)
 	}
+
 	dataUser.ID = idparam
 
 	err = UpdateProfile(conn, dataUser)
