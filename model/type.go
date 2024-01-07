@@ -8,9 +8,9 @@ import (
 
 type User struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	Name        string             `json:"name" bson:"name"`
-	Email       string             `json:"email" bson:"email"`
-	Password    string             `json:"password" bson:"password"`
+	Name        string             `json:"name,omitempty" bson:"name,omitempty,"`
+	Email       string             `json:"email,omitempty" bson:"email,omitempty"`
+	Password    string             `json:"password,omitempty" bson:"password,omitempty"`
 	PhoneNumber string             `json:"phonenumber,omitempty" bson:"phonenumber,omitempty"`
 	Base64Url   string             `bson:"base64url,omitempty" json:"base64url,omitempty"`
 }
