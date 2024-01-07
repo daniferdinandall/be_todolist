@@ -3,7 +3,6 @@ package todolist
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	model "github.com/daniferdinandall/be_todolist/model"
 	module "github.com/daniferdinandall/be_todolist/module"
@@ -34,7 +33,7 @@ func TestEncodeToken(t *testing.T) {
 
 func TestDecodeToken(t *testing.T) {
 	publicKey := "e00b393053b1e23efa50af4d919a1cfb853fcc4cb0cb5b5cce6fc73088fc1722"
-	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA0VDE2OjIzOjEyKzA3OjAwIiwiaWF0IjoiMjAyNC0wMS0wNFQxNDoyMzoxMiswNzowMCIsImlkIjoiNjU5NjU0Yzc5MzFkODFiZDcyYTljNGM2IiwibmJmIjoiMjAyNC0wMS0wNFQxNDoyMzoxMiswNzowMCJ9lr0vK81FvhZmHt7BDcbTbR-ylZFEEs80CE99NhqGr_JLeOtc5_0La4glOt2JfqdcCftQdwE9hntMDOS5R9eYDg"
+	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA3VDIxOjIyOjQ3KzA3OjAwIiwiaWF0IjoiMjAyNC0wMS0wN1QxOToyMjo0NyswNzowMCIsImlkIjoiNjU5NjU0Yzc5MzFkODFiZDcyYTljNGM2IiwibmJmIjoiMjAyNC0wMS0wN1QxOToyMjo0NyswNzowMCJ9k1dKmz0HdalAl06m8qBKI7it5zbgHKjphy5zloe9Co5D2vDCmUXdWNkU6vm6PH_h3zlxCW3Q4L1M3AZhpSomBg"
 	useridstring, err := watoken.Decode(publicKey, tokenstring)
 
 	if err != nil {
@@ -48,7 +47,7 @@ func TestInsertDoc(t *testing.T) {
 	var doc model.Todolist
 	doc.Title = "Test2"
 	doc.Description = "Test"
-	doc.DueDate = time.Now().Unix()
+	// doc.DueDate = time.Now().Unix()
 	doc.Priority = 1
 	doc.Completed = true
 
@@ -87,7 +86,7 @@ func TestCreateTodolist(t *testing.T) {
 	var doc model.Todolist
 	doc.Title = "test time2"
 	doc.Description = "Test"
-	doc.DueDate = time.Now().Unix()
+	// doc.DueDate = time.Now().Unix()
 	doc.Priority = 1
 	doc.Completed = true
 
@@ -99,13 +98,15 @@ func TestCreateTodolist(t *testing.T) {
 
 func TestUpdateDoc(t *testing.T) {
 
-	id, err := primitive.ObjectIDFromHex("659426d7294a5abb63c66959")
+	id, err := primitive.ObjectIDFromHex("659aa9403dbf2d6e0dce3055")
 	if err != nil {
 		t.Error(err)
 	}
 
 	var doc model.Todolist
 	doc.ID = id
+	doc.Title = "test time2"
+	doc.Description = "Test"
 
 	err = module.UpdateTodolist(db, doc)
 	if err != nil {
@@ -117,7 +118,7 @@ func TestUpdateDoc(t *testing.T) {
 func TestGetAllDocByUserID(t *testing.T) {
 	var docs []model.Todolist
 	var doc model.Todolist
-	doc.UserID = "659647e862c130d11ec816c5"
+	doc.UserID = "659654c7931d81bd72a9c4c6"
 	docs, err := module.GetAllTodolistByUserID(db, doc)
 	if err != nil {
 		t.Error(err)
@@ -127,7 +128,7 @@ func TestGetAllDocByUserID(t *testing.T) {
 
 func TestGetDocByID(t *testing.T) {
 	var doc model.Todolist
-	id, err := primitive.ObjectIDFromHex("659647e862c130d11ec816c5")
+	id, err := primitive.ObjectIDFromHex("6596512e80fb1612d85362cc")
 	if err != nil {
 		t.Error(err)
 	}

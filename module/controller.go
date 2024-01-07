@@ -180,6 +180,7 @@ func CreateTodolist(db *mongo.Database, doc model.Todolist) (err error) {
 	unixTimestamp := currentTime.Unix()
 
 	doc.CreatedAt = unixTimestamp
+	doc.Completed = false
 	_, err = collection.InsertOne(context.Background(), doc)
 	if err != nil {
 		fmt.Println("Error InsertDoc in colection", col, ":", err)
@@ -208,7 +209,7 @@ func GetAllTodolistByUserID(db *mongo.Database, doc model.Todolist) (docs []mode
 	}
 	err = cursor.All(context.Background(), &docs)
 	if err != nil {
-		return docs, fmt.Errorf("kesalahan server")
+		return docs, fmt.Errorf(err.Error())
 	}
 	return docs, nil
 }
