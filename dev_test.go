@@ -1,7 +1,9 @@
 package todolist
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"testing"
 
 	model "github.com/daniferdinandall/be_todolist/model"
@@ -33,7 +35,7 @@ func TestEncodeToken(t *testing.T) {
 
 func TestDecodeToken(t *testing.T) {
 	publicKey := "e00b393053b1e23efa50af4d919a1cfb853fcc4cb0cb5b5cce6fc73088fc1722"
-	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA3VDE3OjIwOjQ5WiIsImlhdCI6IjIwMjQtMDEtMDdUMTU6MjA6NDlaIiwiaWQiOiI2NTlhYjUxMWU0Y2JmOWEwYTZiMTY4MjciLCJuYmYiOiIyMDI0LTAxLTA3VDE1OjIwOjQ5WiJ9uvfOoSPH2kL_9ohqTAAUvUWMXZFwhi2GQPcbXkbUap0tDkU80MBgixTSgrvssuw48OmnPxk3-itrNVSa6bsABA"
+	tokenstring := "v4.public.eyJleHAiOiIyMDI0LTAxLTA3VDE3OjU3OjE0WiIsImlhdCI6IjIwMjQtMDEtMDdUMTU6NTc6MTRaIiwiaWQiOiI2NTlhYjUxMWU0Y2JmOWEwYTZiMTY4MjciLCJuYmYiOiIyMDI0LTAxLTA3VDE1OjU3OjE0WiJ9W2RHde696B8_vtd2509X6AEJLCvmy7C9DeUGO6rZEWD-SXkMIxqAiOtUSBE8SnGoSBQ6Hdj4tPeFUTCzSvAcDA"
 	useridstring, err := watoken.Decode(publicKey, tokenstring)
 
 	if err != nil {
@@ -170,19 +172,25 @@ func TestGetProfile(t *testing.T) {
 
 func TestUpdateProfile(t *testing.T) {
 	var doc model.User
-	id, err := primitive.ObjectIDFromHex("659654c7931d81bd72a9c4c6")
+
+	fmt.Println(doc)
+	id, err := primitive.ObjectIDFromHex("659ab511e4cbf9a0a6b16827")
 	if err != nil {
 		t.Error(err)
 	}
 	doc.ID = id
-	doc.Name = "dani ferdinan"
-	doc.PhoneNumber = "625156122123"
-
-	doc.Base64Url = "sasa"
+	doc.Name = "dani ferdisnaney"
 
 	err = module.UpdateProfile(db, doc)
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(doc)
+
+	// Print JSON representation
+	jsonData, err := json.Marshal(doc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("JSON representation:")
+	fmt.Println(string(jsonData))
 }

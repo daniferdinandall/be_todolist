@@ -115,6 +115,7 @@ func SignUp(db *mongo.Database, insertedDoc model.User) error {
 	if insertedDoc.Name == "" || insertedDoc.Email == "" || insertedDoc.Password == "" || insertedDoc.PhoneNumber == "" {
 		return fmt.Errorf("mohon untuk melengkapi data")
 	}
+
 	valid, _ := ValidatePhoneNumber(insertedDoc.PhoneNumber)
 	if !valid {
 		return fmt.Errorf("nomor telepon tidak valid")
@@ -139,7 +140,7 @@ func SignUp(db *mongo.Database, insertedDoc model.User) error {
 
 	insertedDoc.ID = objectId
 	insertedDoc.Password = hash
-
+	insertedDoc.Base64Url = "https://ui-avatars.com/api/?name=" + insertedDoc.Name + "&background=D3D3D3&color=111&size=256"
 	collection := db.Collection(col)
 	_, err := collection.InsertOne(context.Background(), insertedDoc)
 	if err != nil {
