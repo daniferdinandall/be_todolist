@@ -370,3 +370,50 @@ func GCFUpdateProfile(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Req
 	Response.Message = "success"
 	return GCFReturnStruct(Response)
 }
+
+func GCFUpdatePhoto(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV string, r *http.Request) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, "db_todolist")
+	var Response model.TodolistResponse
+	Response.Status = false
+	var dataUser model.User
+
+	// get token from header
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		Response.Message = "error parsing application/json1:" + token
+		return GCFReturnStruct(Response)
+	}
+
+	// decode token
+	useridstring, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+
+	if err1 != nil {
+		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+		return GCFReturnStruct(Response)
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&dataUser)
+	if err != nil {
+		Response.Message = "error parsing application/json3: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+
+	// Get Id
+	idparam, err := primitive.ObjectIDFromHex(useridstring.Id)
+	if err != nil {
+		Response.Message = "Invalid id parameter"
+		return GCFReturnStruct(Response)
+	}
+
+	dataUser.ID = idparam
+
+	_, err = EditPhoto(idparam, conn, r)
+	if err != nil {
+		Response.Message = "error parsing application/json4: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "success"
+	return GCFReturnStruct(Response)
+}

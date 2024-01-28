@@ -13,6 +13,7 @@ import (
 	model "github.com/daniferdinandall/be_todolist/model"
 
 	"github.com/badoux/checkmail"
+	intermoni "github.com/intern-monitoring/backend-intermoni"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -273,6 +274,41 @@ func GetProfile(db *mongo.Database, _id primitive.ObjectID) (doc model.User, err
 		Email:       doc.Email,
 		PhoneNumber: doc.PhoneNumber,
 		Base64Url:   doc.Base64Url,
+	}
+
+	return doc, nil
+}
+
+var imageUrl string
+
+func EditPhoto(_id primitive.ObjectID, db *mongo.Database, r *http.Request) (doc model.User, err error) {
+
+	image := r.FormValue("file")
+
+	if image != "" {
+		imageUrl = image
+	} else {
+		imageUrl, err := intermoni.SaveFileToGithub("daniferdinandall", "daniferdinandall@gmail.com", "image", "todolist", r)
+		if err != nil {
+			return doc, fmt.Errorf("error save file: %s", err)
+		}
+		image = imageUrl
+	}
+
+	doc = model.User{
+		Base64Url: image,
+	}
+
+	col := "user"
+	filter := bson.M{"_id": _id}
+	collection := db.Collection(col)
+	result, err := collection.UpdateOne(context.Background(), filter, bson.M{"$set": doc})
+	if err != nil {
+		fmt.Println("Error GetDoc in colection", col, ":", err)
+	}
+	if result.ModifiedCount == 0 {
+		err = errors.New("no data has been changed with the specified id")
+		return doc, err
 	}
 
 	return doc, nil
